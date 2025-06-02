@@ -1,6 +1,7 @@
 library(XML)
 library(dplyr)
 library(reshape2)
+library(ggplot2)
 options(stringsAsFactors = FALSE)
 
 list_URL <- read.csv("TransferMarkt_Links.csv")
@@ -49,6 +50,7 @@ DF %>%
   filter(grepl("winner", Trophy) | grepl("Winner", Trophy) | grepl("English Champion", Trophy)) %>%
   filter(!grepl("Cup Winners Cup Runner Up", Trophy)) %>% 
   filter(!grepl("Football League Trophy Winner", Trophy)) %>% 
+  filter(!grepl("Inter-Cities Fairs Cup winner", Trophy)) %>% 
   group_by(Team) %>% 
   filter(year == max(year)) %>% 
   select(Team, year, Trophy) %>% 
@@ -61,7 +63,72 @@ DF %>%
   filter(grepl("winner", Trophy) | grepl("Winner", Trophy) | grepl("English Champion", Trophy)) %>%
   filter(!grepl("Cup Winners Cup Runner Up", Trophy)) %>% 
   filter(!grepl("Football League Trophy Winner", Trophy)) %>% 
+  filter(!grepl("Inter-Cities Fairs Cup winner", Trophy)) %>% 
   filter(year > "2000/01") %>% 
   dcast(year ~ Trophy, value.var = "Team", fun.aggregate = max) %>% View()
-  
 
+
+DF %>% 
+  filter(grepl("winner", Trophy) | grepl("Winner", Trophy) | grepl("English Champion", Trophy)) %>%
+  filter(!grepl("Cup Winners Cup Runner Up", Trophy)) %>% 
+  filter(!grepl("Football League Trophy Winner", Trophy)) %>% 
+  filter(!grepl("Inter-Cities Fairs Cup winner", Trophy)) %>% 
+  group_by(Team) %>% 
+  mutate(r = rank(desc(year), ties.method = "random")) %>% 
+  filter(r <= 4) %>% 
+  dcast(Team ~ r, value.var = "year", fun.aggregate = max) %>% 
+  arrange(desc(`1`), desc(`2`), desc(`3`), desc(`4`)) %>% 
+  View()
+
+
+
+
+DF %>% 
+  filter(grepl("winner", Trophy) | grepl("Winner", Trophy) | grepl("English Champion", Trophy)) %>%
+  filter(!grepl("Cup Winners Cup Runner Up", Trophy)) %>% 
+  filter(!grepl("Football League Trophy Winner", Trophy)) %>% 
+  filter(!grepl("Inter-Cities Fairs Cup winner", Trophy)) %>% 
+  # filter(year > "1992/93") %>% 
+  group_by(Team) %>% 
+  summarise(n()) %>% 
+  View()
+
+DF %>% 
+  filter(grepl("winner", Trophy) | grepl("Winner", Trophy) | grepl("English Champion", Trophy)) %>%
+  filter(!grepl("Cup Winners Cup Runner Up", Trophy)) %>% 
+  filter(!grepl("Football League Trophy Winner", Trophy)) %>% 
+  filter(!grepl("Inter-Cities Fairs Cup winner", Trophy)) %>% 
+  # filter(year > "1992/93") %>% 
+  group_by(Team, Trophy) %>% 
+  summarise(times = n()) %>% 
+  dcast(Team ~ Trophy, value.var = "times") %>% 
+  View()
+
+
+
+
+DF %>% 
+  filter(grepl("winner", Trophy) | grepl("Winner", Trophy) | grepl("English Champion", Trophy)) %>%
+  filter(!grepl("Cup Winners Cup Runner Up", Trophy)) %>% 
+  filter(!grepl("Football League Trophy Winner", Trophy)) %>% 
+  filter(!grepl("Inter-Cities Fairs Cup winner", Trophy)) %>% 
+  # filter(year > "1992/93") %>% 
+  group_by(Trophy) %>% 
+  summarise(n()) %>% 
+  View()
+
+
+
+DF %>% 
+  filter(Trophy == "Champions League Participant") %>% 
+  filter(year > '2010') %>% 
+  mutate(Trophy = 1) %>% 
+  dcast(year ~ Team, value.var = "Trophy", fill = 0) %>% 
+  View()
+
+DF %>% 
+  filter(Trophy %in% c("Champions League Participant", "Europa League Participant")) %>% 
+  filter(year > '2010') %>%
+  ggplot(aes(x = year, y = Team, fill = Trophy)) +
+  theme(axis.text.x = element_text(angle = -90)) +
+  geom_tile()
